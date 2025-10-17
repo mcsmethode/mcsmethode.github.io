@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>McDonald's Produktliste</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea, #764ba2 100%);
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-container {
+            position: sticky;
+            top: 0;
+            background: rgba(30, 30, 45, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            min-width: max-content;
+            padding: 0.5rem 0;
+        }
+
+        .filter-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #202020, #4d4d5a);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .filter-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .products-container {
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .product-card {
+            background: rgba(30, 30, 45, 0.95);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(28, 35, 65, 0.3), rgba(24, 29, 54, 0.3));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2 100%);
+            color: rgb(255, 255, 255);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .product-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            z-index: -1;
+        }
+
+        .product-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .product-button:active {
+            transform: scale(0.95);
+        }
+
+        .product-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-id {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .product-price {
+            color: #DA291C;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .category-header {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 2rem 0 1.5rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-tab {
+                font-size: 0.85rem;
+                padding: 0.6rem 1.2rem;
+            }
+
+            .category-header {
+                font-size: 1.5rem;
+            }
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFC72C, #DA291C);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 99;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .scroll-indicator:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🍔 McDonald's Menu</h1>
+    </div>
+
+    <div class="filter-container">
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-category="alle">Alle</button>
+            <button class="filter-tab" data-category="burger">Burger</button>
+            <button class="filter-tab" data-category="menu">Menüs</button>
+            <button class="filter-tab" data-category="frühstück">Frühstück</button>
+            <button class="filter-tab" data-category="beilagen">Beilagen</button>
+            <button class="filter-tab" data-category="getränke">Getränke</button>
+            <button class="filter-tab" data-category="desserts">Desserts</button>
+            <button class="filter-tab" data-category="sonstiges">Sonstiges</button>
+        </div>
+    </div>
+
+    <div class="products-container" id="productsContainer"></div>
+
+    <div class="scroll-indicator" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        ↑
+    </div>
+    <script>
+        const products = [
+            {id: 39, name: "Xmas Deal Big Mac", category: "menu"},
+            {id: 1756, name: "McWrap Rührei Cheese Grande", price: "7,50€", category: "frühstück"},
+            {id: 1757, name: "McWrap Rührei Bacon", price: "4,00€", category: "frühstück"},
+            {id: 1758, name: "McWrap Rührei Bacon Grande", price: "6,00€", category: "frühstück"},
+            {id: 1759, name: "McWrap Rührei Bacon Grande", price: "7,50€", category: "frühstück"},
+            {id: 1760, name: "McWrap Rührei Bacon", price: "3,99€", category: "frühstück"},
+            {id: 1761, name: "McWrap Rührei Cheese", price: "3,99€", category: "frühstück"},
+            {id: 1762, name: "12 Mini Pancakes", price: "3,49€", category: "frühstück"},
+            {id: 1763, name: "6 Mini Pancakes", price: "1,80€", category: "frühstück"},
+            {id: 1765, name: "6 Mini Pancakes Duo", price: "3,30€", category: "frühstück"},
+            {id: 1766, name: "12 Mini Pancakes", price: "3,50€", category: "frühstück"},
+            {id: 1767, name: "12 Mini Pancakes Duo Grande", price: "5,50€", category: "frühstück"},
+            {id: 1768, name: "12 Mini Pancakes Menü Grande", price: "7,00€", category: "menu"},
+            {id: 1787, name: "McToast Cheese", price: "1,49€", category: "frühstück"},
+            {id: 1788, name: "6 Mini Pancakes", price: "1,79€", category: "frühstück"},
+            {id: 1798, name: "McToast Bacon Cheese", price: "1,99€", category: "frühstück"},
+            {id: 1799, name: "McMuffin Bacon Egg", price: "2,99€", category: "frühstück"},
+            {id: 1800, name: "McMuffin Sausage Egg", price: "3,39€", category: "frühstück"},
+            {id: 1801, name: "McMuffin Fresh Chicken", price: "2,99€", category: "frühstück"},
+            {id: 1745, name: "Big Morning Farmer", price: "4,00€", category: "frühstück"},
+            {id: 1748, name: "Big Morning Chicken", price: "4,00€", category: "frühstück"},
+            {id: 1749, name: "Big Morning Chicken Grande", price: "6,00€", category: "frühstück"},
+            {id: 1750, name: "Big Morning Chicken Grande", price: "7,50€", category: "frühstück"},
+            {id: 1751, name: "Big Morning Egg", price: "3,50€", category: "frühstück"},
+            {id: 1752, name: "Big Morning Egg Duo", price: "5,50€", category: "frühstück"},
+            {id: 1753, name: "Big Morning Egg Menü Grande", price: "7,00€", category: "menu"},
+            {id: 1754, name: "McWrap Rührei Cheese", price: "4,00€", category: "frühstück"},
+            {id: 1755, name: "McWrap Rührei Cheese Grande", price: "6,00€", category: "frühstück"},
+            {id: 2006, name: "Hamburger",price: "2,20€", category: "burger"},
+            {id: 2012, name: "Cheeseburger", category: "burger"},
+            {id: 2017, name: "2x Cheeseburger", category: "burger"},
+            {id: 2046, name: "Hamburger Royal Cheese", category: "burger"},
+            {id: 2053, name: "Big Mac Menü", category: "menu"},
+            {id: 2057, name: "Big Mac", category: "burger"},
+            {id: 2059, name: "Big Mac", price: "15,74€", category: "burger"},
+            {id: 2075, name: "2x Big Mac", category: "burger"},
+            {id: 2071, name: "McRib", category: "burger"},
+            {id: 2086, name: "2x McRib", category: "burger"},
+            {id: 2104, name: "6 Chicken Nuggets", price: "1,50€", category: "beilagen"},
+            {id: 2107, name: "6 Chicken Nuggets", price: "2,00€", category: "beilagen"},
+            {id: 2136, name: "Doppelcheeseburger", category: "burger"},
+            {id: 2196, name: "12 Chicken Nuggets", category: "beilagen"},
+            {id: 2224, name: "2x Filet-O-Fish", category: "burger"},
+            {id: 2241, name: "6 Plant Nuggets", category: "beilagen"},
+            {id: 2242, name: "6 Plant Nuggets", category: "beilagen"},
+            {id: 2243, name: "9 Plant Nuggets", category: "beilagen"},
+            {id: 2245, name: "2x Royal Cheese", category: "burger"},
+            {id: 2246, name: "4 Plant Nuggets", category: "beilagen"},
+            {id: 2247, name: "20 Plant Nuggets", category: "beilagen"},
+            {id: 2248, name: "20 Plant Nuggets", category: "beilagen"},
+            {id: 2251, name: "Happy Meal Hamburger", category: "menu"},
+            {id: 2256, name: "Hamburger", category: "burger"},
+            {id: 2261, name: "Happy Meal 4er Chicken", category: "menu"},
+            {id: 2266, name: "4 Chicken Nuggets", category: "beilagen"},
+            {id: 2281, name: "Happy Meal Cheeseburger", category: "menu"},
+            {id: 2286, name: "Cheeseburger", category: "burger"},
+            {id: 2311, name: "2x Royal TS", category: "burger"},
+            {id: 2312, name: "Royal TS Menü Small", category: "menu"},
+            {id: 2320, name: "2x McChicken Classic", category: "burger"},
+            {id: 2321, name: "McChicken Classic Menü", category: "menu"},
+            {id: 2322, name: "McChicken Classic Menü", category: "menu"},
+            {id: 2324, name: "4 Plant Nuggets", category: "beilagen"},
+            {id: 2325, name: "McChicken Classic", category: "burger"},
+            {id: 2329, name: "Hamburger Royal TS", category: "burger"},
+            {id: 2369, name: "McRib Menü Maxi", category: "menu"},
+            {id: 2378, name: "McRib", category: "burger"},
+            {id: 2381, name: "Royal TS Menü Maxi", category: "menu"},
+            {id: 2408, name: "Chickenburger", category: "burger"},
+            {id: 2478, name: "Filet-O-Fish Menü Small", category: "menu"},
+            {id: 2500, name: "2 Hamburger", category: "burger"},
+            {id: 2501, name: "2 Cheeseburger", category: "burger"},
+            {id: 2502, name: "2 Chickenburger", category: "burger"},
+            {id: 2505, name: "Chickenburger Menü", category: "menu"},
+            {id: 2510, name: "Big Mac Menü", category: "menu"},
+            {id: 2525, name: "2x Hamburger + Pommes", category: "menu"},
+            {id: 2572, name: "Doppel Royal Cheese", category: "burger"},
+            {id: 2574, name: "Doppel Royal Cheese Menü", category: "menu"},
+            {id: 2588, name: "Filet-O-Fish Menü Maxi", category: "menu"},
+            {id: 2600, name: "Double Hamburger Royal TS", category: "burger"},
+            {id: 2601, name: "Double Hamburger Royal Cheese", category: "burger"},
+            {id: 2603, name: "McRib Menü", category: "menu"},
+            {id: 2609, name: "Cheeseburger Maxi Menü", category: "menu"},
+            {id: 2610, name: "Cheeseburger Menü", category: "menu"},
+            {id: 2644, name: "2 Big Mac", category: "burger"},
+            {id: 2655, name: "6 Chicken Nuggets Menü", category: "menu"},
+            {id: 2741, name: "Royal Cheese Maxi Menü", category: "menu"},
+            {id: 2749, name: "Big Mac Maxi Menü", category: "menu"},
+            {id: 2752, name: "Royal Cheese Menü", category: "menu"},
+            {id: 2777, name: "Doublecheeseburger", category: "burger"},
+            {id: 2805, name: "McChicken Classic", category: "burger"},
+            {id: 2807, name: "Big Mac", category: "burger"},
+            {id: 2808, name: "McRib", category: "burger"},
+            {id: 2810, name: "6 Chicken McNuggets", category: "beilagen"},
+            {id: 2854, name: "Chickenburger", category: "burger"},
+            {id: 2856, name: "Cheeseburger", category: "burger"},
+            {id: 2870, name: "Big Mac", category: "burger"},
+            {id: 2873, name: "McChicken Classic", category: "burger"},
+            {id: 2876, name: "Filet-O-Fish", category: "burger"},
+            {id: 2877, name: "6 Chicken McNuggets", category: "beilagen"},
+            {id: 2881, name: "20 Chicken Nuggets", category: "beilagen"},
+            {id: 2922, name: "20 Chicken Nuggets", category: "beilagen"},
+            {id: 2933, name: "4 McPlant Nuggets", category: "beilagen"},
+            {id: 2942, name: "McDouble Chili Cheese", category: "burger"},
+            {id: 2945, name: "Hamburger", category: "burger"},
+            {id: 2946, name: "4 Chicken Nuggets", category: "beilagen"},
+            {id: 2948, name: "9 Chicken Nuggets", category: "beilagen"},
+            {id: 2959, name: "Chickenburger Menü Small", category: "menu"},
+            {id: 2965, name: "Double Chickenburger", category: "burger"},
+            {id: 2970, name: "Big Mac", category: "burger"},
+            {id: 2972, name: "6 Chicken McNuggets", category: "beilagen"},
+            {id: 2973, name: "McRib", category: "burger"},
+            {id: 2974, name: "Hamburger Royal TS", category: "burger"},
+            {id: 2975, name: "Hamburger Royal Cheese", category: "burger"},
+            {id: 2976, name: "Filet-O-Fish Burger", category: "burger"},
+            {id: 2978, name: "Cheeseburger", category: "burger"},
+            {id: 2979, name: "Chickenburger", category: "burger"},
+            {id: 3001, name: "Pommes Klein", category: "beilagen"},
+            {id: 3006, name: "Pommes Klein", category: "beilagen"},
+            {id: 3011, name: "Pommes Mittel", category: "beilagen"},
+            {id: 3021, name: "Pommes Groß", category: "beilagen"},
+            {id: 3029, name: "Pommes Groß", category: "beilagen"},
+            {id: 3036, name: "Pommes Klein", category: "beilagen"},
+            {id: 3041, name: "Curly Fries", category: "beilagen"},
+            {id: 3067, name: "Curly Fries", category: "beilagen"},
+            {id: 3251, name: "8 Nacho Cheese Snackers", category: "beilagen"},
+            {id: 3801, name: "Salat", category: "beilagen"},
+            {id: 3802, name: "Salat", category: "beilagen"},
+            {id: 3806, name: "Salat", category: "beilagen"},
+            {id: 3882, name: "Big Caesar Chicken Salad", category: "beilagen"},
+            {id: 4064, name: "Apfeltasche", category: "desserts"},
+            {id: 4089, name: "Frucht Quatsch", category: "desserts"},
+            {id: 4098, name: "Bio Apfeltüte", category: "desserts"},
+            {id: 4107, name: "Himbeertasche", category: "desserts"},
+            {id: 4127, name: "Choco Cookie", category: "desserts"},
+            {id: 4128, name: "Pecan Nut Cookie", category: "desserts"},
+            {id: 4169, name: "Croissant", category: "desserts"},
+            {id: 4170, name: "Buttercroissant", category: "desserts"},
+            {id: 4187, name: "Rainbow Donut", category: "desserts"},
+            {id: 4361, name: "Cookie Dough", category: "desserts"},
+            {id: 4620, name: "McFlurry Original", category: "desserts"},
+            {id: 4623, name: "McSundae", category: "desserts"},
+            {id: 4678, name: "McFlurry Original", category: "desserts"},
+            {id: 4698, name: "McSundae", category: "desserts"},
+            {id: 5048, name: "Milchshake Schoko", category: "getränke"},
+            {id: 5058, name: "Milchshake Vanille", category: "getränke"},
+            {id: 5068, name: "Milchshake Erdbeer", category: "getränke"},
+            {id: 5613, name: "McCrispy", category: "burger"},
+            {id: 5680, name: "McCrispy Spicy", category: "burger"},
+            {id: 6154, name: "M Burger", category: "burger"},
+            {id: 6181, name: "Signature Bacon BBQ", category: "burger"},
+            {id: 6252, name: "McWrap Chicken Caesar", category: "burger"},
+            {id: 6256, name: "McWrap Chicken Cesar", category: "burger"},
+            {id: 6296, name: "McWrap Chicken Sweet-Chili", category: "burger"},
+            {id: 6477, name: "Big Tasty Bacon", category: "burger"},
+            {id: 6478, name: "Big Tasty Bacon Menü", category: "menu"},
+            {id: 6479, name: "Big Tasty Bacon Menü", category: "menu"},
+            {id: 7003, name: "Cola Klein", category: "getränke"},
+            {id: 7005, name: "Cola Klein", category: "getränke"},
+            {id: 7009, name: "Coca Cola 0,25l", category: "getränke"},
+            {id: 7012, name: "Cola 0,4l", category: "getränke"},
+            {id: 7015, name: "Cola 0,4l", category: "getränke"},
+            {id: 7022, name: "Cola 0,5l", category: "getränke"},
+            {id: 7025, name: "Cola 0,5l", category: "getränke"},
+            {id: 7033, name: "Fanta 0,25l", category: "getränke"},
+            {id: 7035, name: "Fanta 0,25l", category: "getränke"},
+            {id: 7039, name: "Fanta 0,25l", category: "getränke"},
+            {id: 7042, name: "Fanta 0,4l", category: "getränke"},
+            {id: 7045, name: "Fanta 0,4l", category: "getränke"},
+            {id: 7052, name: "Fanta 0,5l", category: "getränke"},
+            {id: 7055, name: "Fanta 0,5l", category: "getränke"},
+            {id: 7063, name: "Sprite 0,25l", category: "getränke"},
+            {id: 7065, name: "Sprite 0,25l", category: "getränke"},
+            {id: 7069, name: "Sprite 0,25l", category: "getränke"},
+            {id: 7072, name: "Sprite 0,4l", category: "getränke"},
+            {id: 7075, name: "Sprite 0,4l", category: "getränke"},
+            {id: 7082, name: "Sprite 0,5l", category: "getränke"},
+            {id: 7085, name: "Sprite 0,5l", category: "getränke"},
+            {id: 7095, name: "Cola Light 0,25l", category: "getränke"},
+            {id: 7099, name: "Cola Light 0,25l", category: "getränke"},
+            {id: 7102, name: "Cola Light 0,4l", category: "getränke"},
+            {id: 7103, name: "Cola Light Mehrweg", category: "getränke"},
+            {id: 7105, name: "Cola Light 0,4l", category: "getränke"},
+            {id: 7112, name: "Cola Light 0,5l", category: "getränke"},
+            {id: 7115, name: "Cola Light 0,5l", category: "getränke"},
+            {id: 7155, name: "Kaffee Small", category: "getränke"},
+            {id: 7163, name: "Kaffee Small", category: "getränke"},
+            {id: 7164, name: "Kaffee Regular", category: "getränke"},
+            {id: 7165, name: "Kaffee Grande", category: "getränke"},
+            {id: 7200, name: "Latte Macchiato Regular", category: "getränke"},
+            {id: 7202, name: "Cappuccino Regular", category: "getränke"},
+            {id: 7203, name: "Cappuccino Grande", category: "getränke"},
+            {id: 7204, name: "Cappuccino Small", category: "getränke"},
+            {id: 7208, name: "Kaffee Grande", category: "getränke"},
+            {id: 7209, name: "Kaffee Grande", category: "getränke"},
+            {id: 7214, name: "Espresso Grande", category: "getränke"},
+            {id: 7215, name: "Kaffee Small", category: "getränke"},
+            {id: 7218, name: "Espresso Grande", category: "getränke"},
+            {id: 7221, name: "Latte Macchiato Grande", category: "getränke"},
+            {id: 7233, name: "Milchshake Vanille 0,25l", category: "getränke"},
+            {id: 7234, name: "Milchshake Vanille 0,25l", category: "getränke"},
+            {id: 7235, name: "Milchshake Vanille 0,5l", category: "getränke"},
+            {id: 7236, name: "Milchshake Erdbeer 0,25l", category: "getränke"},
+            {id: 7237, name: "Milchshake Erdbeer 0,25l", category: "getränke"},
+            {id: 7238, name: "Milchshake Erdbeer 0,4l", category: "getränke"},
+            {id: 7239, name: "Milchshake Schoko 0,25l", category: "getränke"},
+            {id: 7240, name: "Milchshake Schoko 0,25l", category: "getränke"},
+            {id: 7241, name: "Milchshake Schoko 0,4l", category: "getränke"},
+            {id: 7244, name: "Kaffee Regular", category: "getränke"},
+            {id: 7245, name: "Erdbeer Milchshake 0,4l", category: "getränke"},
+            {id: 7246, name: "Vanille Milchshake 0,4l", category: "getränke"},
+            {id: 7247, name: "Schoko Milchshake 0,4l", category: "getränke"},
+            {id: 7248, name: "Cappuccino Small", category: "getränke"},
+            {id: 7255, name: "Orangensaft 0,25l", category: "getränke"},
+            {id: 7256, name: "Orangensaft 0,25l", category: "getränke"},
+            {id: 7259, name: "Coca Cola 0,4l", category: "getränke"},
+            {id: 7260, name: "Coca Cola 0,5l", category: "getränke"},
+            {id: 7262, name: "Coca Cola Zero 0,4l", category: "getränke"},
+            {id: 7263, name: "Coca Cola Zero 0,5l", category: "getränke"},
+            {id: 7265, name: "Fanta 0,4l", category: "getränke"},
+            {id: 7266, name: "Fanta 0,5l", category: "getränke"},
+            {id: 7268, name: "Sprite 0,4l", category: "getränke"},
+            {id: 7269, name: "Sprite 0,5l", category: "getränke"},
+            {id: 7271, name: "Cappuccino Regular", category: "getränke"},
+            {id: 7272, name: "Latte Macchiato Regular", category: "getränke"},
+            {id: 7274, name: "Cappuccino Regular", category: "getränke"},
+            {id: 7285, name: "Kaffee Regular", category: "getränke"},
+            {id: 7287, name: "Kaffee Regular", category: "getränke"},
+            {id: 7293, name: "Bio Schorle Apfel Birne 0,25l", category: "getränke"},
+            {id: 7294, name: "Earl Grey Tee Regular", category: "getränke"},
+            {id: 7295, name: "Grüner Tee Regular", category: "getränke"},
+            {id: 7296, name: "Fresh Mint Tee Regular", category: "getränke"},
+            {id: 7306, name: "Dark Choco Small", category: "getränke"},
+            {id: 7308, name: "Dark Choco Regular", category: "getränke"},
+            {id: 7310, name: "Dark Choco Grande", category: "getränke"},
+            {id: 7312, name: "Lipton Ice Tea Pfirsich 0,4l", category: "getränke"},
+            {id: 7313, name: "Lipton Ice Tea Pfirsich 0,5l", category: "getränke"},
+            {id: 7318, name: "Coca Cola Light 0,4l", category: "getränke"},
+            {id: 7319, name: "Coca Cola Light 0,5l", category: "getränke"},
+            {id: 7323, name: "Coca Cola Zero 0,25l", category: "getränke"},
+            {id: 7325, name: "Coca Cola Zero 0,5l", category: "getränke"},
+            {id: 7329, name: "Coca Cola Zero 0,25l", category: "getränke"},
+            {id: 7333, name: "Lipton Ice Tea Pfirsich 0,25l", category: "getränke"},
+            {id: 7334, name: "Lipton Ice Tea Pfirsich 0,4l", category: "getränke"},
+            {id: 7335, name: "Lipton Ice Tea Pfirsich 0,5l", category: "getränke"},
+            {id: 7337, name: "Lipton Ice Tea Pfirsich 0,25l", category: "getränke"},
+            {id: 7338, name: "Lipton Ice Tea Pfirsich 0,25l", category: "getränke"},
+            {id: 7339, name: "Coca Cola Zero 0,25l", category: "getränke"},
+            {id: 7345, name: "Apfelsaftschorle", category: "getränke"},
+            {id: 7349, name: "Coca Cola Zero 0,4l", category: "getränke"},
+            {id: 7359, name: "ViO Mineralwasser Medium", category: "getränke"},
+            {id: 7361, name: "ViO Mineralwasser Still", category: "getränke"},
+            {id: 7363, name: "Sprite 0,5l Flasche", category: "getränke"},
+            {id: 7365, name: "Fanta 0,5l Flasche", category: "getränke"},
+            {id: 7367, name: "Coca Cola Light Flasche", category: "getränke"},
+            {id: 7369, name: "Coca Cola Flasche", category: "getränke"},
+            {id: 7379, name: "Red Bull", category: "getränke"},
+            {id: 7471, name: "Dark Chocolat Haferdrink Small", category: "getränke"},
+            {id: 7472, name: "Dark Chocolat Haferdrink Small", category: "getränke"},
+            {id: 7541, name: "Bier 0,33l", category: "getränke"},
+            {id: 7542, name: "Coca Cola 0,25l", category: "getränke"},
+            {id: 7543, name: "Coca Cola 0,4l", category: "getränke"},
+            {id: 7544, name: "Coca Cola 0,5l", category: "getränke"},
+            {id: 7545, name: "Coca Cola Zero 0,25l", category: "getränke"},
+            {id: 7546, name: "Coca Cola Zero 0,4l", category: "getränke"},
+            {id: 7548, name: "Coca Cola Light 0,25l", category: "getränke"},
+            {id: 7549, name: "Coca Cola Light 0,4l", category: "getränke"},
+            {id: 7550, name: "Coca Cola Light 0,5l", category: "getränke"},
+            {id: 7551, name: "Sprite 0,25l", category: "getränke"},
+            {id: 7552, name: "Sprite 0,4l", category: "getränke"},
+            {id: 7553, name: "Sprite 0,5l", category: "getränke"},
+            {id: 7554, name: "Fanta 0,25l", category: "getränke"},
+            {id: 7555, name: "Fanta 0,4l", category: "getränke"},
+            {id: 7556, name: "Fanta 0,5l", category: "getränke"},
+            {id: 7557, name: "Lipton Ice Tea Pfirsich 0,25l", category: "getränke"},
+            {id: 7558, name: "Lipton Ice Tea Pfirsich 0,4l", category: "getränke"},
+            {id: 7559, name: "Lipton Ice Tea Pfirsich 0,5l", category: "getränke"},
+            {id: 7594, name: "Dark Chocolate Small", category: "getränke"},
+            {id: 7595, name: "Dark Chocolate Regular", category: "getränke"},
+            {id: 7596, name: "Dark Chocolate Grande", category: "getränke"},
+            {id: 7598, name: "Dark Chocolate Haferdrink Regular", category: "getränke"},
+            {id: 7599, name: "Dark Chocolate Haferdrink Grande", category: "getränke"},
+            {id: 7607, name: "Vanille Milchshake 0,4l", category: "getränke"},
+            {id: 7608, name: "Schoko Milchshake 0,25l", category: "getränke"},
+            {id: 7609, name: "Schoko Milchshake 0,4l", category: "getränke"},
+            {id: 7610, name: "Erdbeer Milchshake 0,25l", category: "getränke"},
+            {id: 7611, name: "Erdbeer Milchshake 0,4l", category: "getränke"},
+            {id: 7624, name: "Iced Coffee Shake Choc 0,4l", category: "getränke"},
+            {id: 7629, name: "Milchshake Schoko 0,25l", category: "getränke"},
+            {id: 7630, name: "Milchshake Vanille 0,25l", category: "getränke"},
+            {id: 7631, name: "Milchshake Erdbeer 0,25l", category: "getränke"},
+            {id: 7634, name: "Earl Grey Tee Regular", category: "getränke"},
+            {id: 7635, name: "Grüntee Regular", category: "getränke"},
+            {id: 7636, name: "Fresh Mint Tee Regular", category: "getränke"},
+            {id: 7639, name: "Cappuccino Regular", category: "getränke"},
+            {id: 7640, name: "Latte Macchiato Regular", category: "getränke"},
+            {id: 7641, name: "Latte Macchiato Grande", category: "getränke"},
+            {id: 7642, name: "Espresso Macchiato Grande", category: "getränke"},
+            {id: 7645, name: "Latte Macchiato Regular", category: "getränke"},
+            {id: 7647, name: "Latte Macchiato Grande", category: "getränke"},
+            {id: 7654, name: "Milchshake Schoko 0,4l", category: "getränke"},
+            {id: 7655, name: "Vanille Milchshake 0,4l", category: "getränke"},
+            {id: 7656, name: "Erdbeer Milchshake 0,4l", category: "getränke"},
+            {id: 7663, name: "Espresso Small", category: "getränke"},
+            {id: 7665, name: "Espresso Macchiato Small", category: "getränke"},
+            {id: 7836, name: "Babyccino", category: "getränke"},
+            {id: 7838, name: "Soja Cappuccino Regular", category: "getränke"},
+            {id: 7839, name: "Soja Latte Macchiato Regular", category: "getränke"},
+            {id: 7851, name: "Chai Latte Regular", category: "getränke"},
+            {id: 7853, name: "Chai Latte Haferdrink Regular", category: "getränke"},
+            {id: 7855, name: "Dark Chocolate Haferdrink Regular", category: "getränke"},
+            {id: 7856, name: "Dark Chocolate Haferdrink Grande", category: "getränke"},
+            {id: 7857, name: "Earl Grey Tee Regular", category: "getränke"},
+            {id: 7858, name: "Grüntee Regular", category: "getränke"},
+            {id: 7859, name: "Fresh Mint Tee Regular", category: "getränke"},
+            {id: 7860, name: "Espresso Macchiato Grande", category: "getränke"},
+            {id: 8060, name: "JC Geschenk", category: "sonstiges"},
+            {id: 8081, name: "Sonic 3 Geschenk", category: "sonstiges"},
+            {id: 8120, name: "Becherhalter", category: "sonstiges"},
+            {id: 8122, name: "Pommeshalter", category: "sonstiges"},
+            {id: 8255, name: "Fanta 0,33l Dose", category: "getränke"},
+            {id: 8260, name: "Sporttasche", category: "sonstiges"},
+            {id: 8320, name: "Keine Beigabe", category: "sonstiges"},
+            {id: 8321, name: "Glas Nachtblau", category: "sonstiges"},
+            {id: 8323, name: "Glas Türkis", category: "sonstiges"},
+            {id: 8325, name: "Glas Schwarz", category: "sonstiges"},
+            {id: 8326, name: "Glas Pink", category: "sonstiges"},
+            {id: 8327, name: "Glas Gelb", category: "sonstiges"},
+            {id: 8329, name: "Glas Weiß", category: "sonstiges"},
+            {id: 8330, name: "Kein Magnet", category: "sonstiges"},
+            {id: 8331, name: "Magnet Pommes", category: "sonstiges"},
+            {id: 8332, name: "Magnet Tasche", category: "sonstiges"},
+            {id: 9000, name: "Entkoffeiniert", category: "sonstiges"},
+            {id: 9002, name: "Laktosefreie Milch", category: "sonstiges"},
+            {id: 9003, name: "Haferdrink", category: "sonstiges"},
+            {id: 9090, name: "Earl Grey", category: "getränke"},
+            {id: 9091, name: "Green Tea", category: "getränke"},
+            {id: 9092, name: "Fresh Mint", category: "getränke"}
+        ];
+
+        let currentCategory = 'alle';
+
+        function renderProducts(category) {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '';
+
+            const filteredProducts = category === 'alle' 
+                ? products 
+                : products.filter(p => p.category === category);
+
+            if (category === 'alle') {
+                const categories = {
+                    'burger': 'Burger',
+                    'menu': 'Menüs',
+                    'frühstück': 'Frühstück',
+                    'beilagen': 'Beilagen',
+                    'getränke': 'Getränke',
+                    'desserts': 'Desserts',
+                    'sonstiges': 'Sonstiges'
+                };
+
+                for (const [cat, title] of Object.entries(categories)) {
+                    const categoryProducts = products.filter(p => p.category === cat);
+                    if (categoryProducts.length > 0) {
+                        const header = document.createElement('h2');
+                        header.className = 'category-header';
+                        header.textContent = title;
+                        container.appendChild(header);
+
+                        const grid = document.createElement('div');
+                        grid.className = 'product-grid';
+                        categoryProducts.forEach(product => {
+                            grid.appendChild(createProductCard(product));
+                        });
+                        container.appendChild(grid);
+                    }
+                }
+            } else {
+                const grid = document.createElement('div');
+                grid.className = 'product-grid';
+                filteredProducts.forEach(product => {
+                    grid.appendChild(createProductCard(product));
+                });
+                container.appendChild(grid);
+            }
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            card.innerHTML = `
+                <div class="product-info">
+                    <span class="product-id">ID: ${product.id}</span>
+                    ${product.price ? `<span class="product-price">${product.price}</span>` : ''}
+                </div>
+                <button class="product-button" onclick="openProduct(${product.id})">
+                    ${product.name}
+                </button>
+            `;
+            
+            return card;
+        }
+
+        function openProduct(prodID) {
+            window.location.href = `mcdmobileapp://order/productDetail?prodID=${prodID}`;
+        }
+
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.category;
+                renderProducts(currentCategory);
+            });
+        });
+
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            const scrollIndicator = document.querySelector('.scroll-indicator');
+            if (window.scrollY > 300) {
+                scrollIndicator.style.opacity = '1';
+            } else {
+                scrollIndicator.style.opacity = '0';
+            }
+        });
+
+        renderProducts('alle');
+    </script>
+  
+</body>
+</html>
